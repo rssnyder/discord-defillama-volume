@@ -82,13 +82,13 @@ func main() {
 			var fmtVolume string
 			switch {
 			case volume.Total24H < 1000000:
-				fmtVolume = p.Sprintf("%s$%.2fk", *header, volume.Total24H/1000)
+				fmtVolume = p.Sprintf("%s$%.0fk", *header, volume.Total24H/1000)
 			case volume.Total24H < 1000000000:
-				fmtVolume = p.Sprintf("%s$%.2fM", *header, volume.Total24H/1000000)
+				fmtVolume = p.Sprintf("%s$%.0fM", *header, volume.Total24H/1000000)
 			case volume.Total24H < 1000000000000:
-				fmtVolume = p.Sprintf("%s$%.2fB", *header, volume.Total24H/1000000000)
+				fmtVolume = p.Sprintf("%s$%.0fB", *header, volume.Total24H/1000000000)
 			case volume.Total24H < 1000000000000000:
-				fmtVolume = p.Sprintf("%s$%.2fT", *header, volume.Total24H/1000000000000)
+				fmtVolume = p.Sprintf("%s$%.0fT", *header, volume.Total24H/1000000000000)
 			}
 
 			if *nickname {
