@@ -14,7 +14,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-var token, protocol, activity, metrics *string
+var token, protocol, header, activity, metrics *string
 var nickname *bool
 var refresh *int
 var updates prometheus.Counter
@@ -23,6 +23,7 @@ func init() {
 	token = flag.String("token", "", "discord bot token")
 	protocol = flag.String("protocol", "", "protocol to get tvl for")
 	nickname = flag.Bool("nickname", true, "set data in nickname")
+	header = flag.String("header", "", "text before data in nickname")
 	activity = flag.String("activity", "", "bot activity")
 	refresh = flag.Int("refresh", 300, "seconds between refresh")
 	metrics = flag.String("metrics", ":8080", "address for prometheus metric serving")
@@ -65,6 +66,7 @@ func main() {
 	}
 
 	ticker := time.NewTicker(time.Duration(*refresh) * time.Second)
+	activityCycles := 1
 
 	for {
 		select {
@@ -80,13 +82,13 @@ func main() {
 			var fmtVolume string
 			switch {
 			case volume.Total24H < 1000000:
-				fmtVolume = p.Sprintf("$%.2fk", volume.Total24H/1000)
+				fmtVolume = p.Sprintf("%s$%.2fk", *header, volume.Total24H/1000)
 			case volume.Total24H < 1000000000:
-				fmtVolume = p.Sprintf("$%.2fM", volume.Total24H/1000000)
+				fmtVolume = p.Sprintf("%s$%.2fM", *header, volume.Total24H/1000000)
 			case volume.Total24H < 1000000000000:
-				fmtVolume = p.Sprintf("$%.2fB", volume.Total24H/1000000000)
+				fmtVolume = p.Sprintf("%s$%.2fB", *header, volume.Total24H/1000000000)
 			case volume.Total24H < 1000000000000000:
-				fmtVolume = p.Sprintf("$%.2fT", volume.Total24H/1000000000000)
+				fmtVolume = p.Sprintf("%s$%.2fT", *header, volume.Total24H/1000000000000)
 			}
 
 			if *nickname {
@@ -109,25 +111,25 @@ func main() {
 					updates.Inc()
 				}
 			}
-			if *activity != "" {
-				err = dg.UpdateWatchStatus(0, *activity)
-				if err != nil {
-					log.Printf("Unable to set activity: %s\n", err)
-				} else {
-					log.Printf("Set activity: %s\n", *activity)
-				}
-			} else {
+			fmt.Println(activityCycles)
+			switch {
+			case activityCycles == 1:
 				if volume.Change1D > 0 {
-					*activity = fmt.Sprintf("%.2f ↗️", volume.Change1D)
+					*activity = fmt.Sprintf("%.2fM ↗️", volume.Change1D)
 				} else {
-					*activity = fmt.Sprintf("%.2f ↘️", volume.Change1D)
+					*activity = fmt.Sprintf("%.2fM ↘️", volume.Change1D)
 				}
-				err = dg.UpdateWatchStatus(0, *activity)
-				if err != nil {
-					log.Printf("Unable to set activity: %s\n", err)
-				} else {
-					log.Printf("Set activity: %s\n", *activity)
-				}
+				activityCycles -= 1
+			case activityCycles == 0:
+				*activity = "24hr Change"
+				activityCycles += 1
+			}
+
+			err = dg.UpdateWatchStatus(0, *activity)
+			if err != nil {
+				log.Printf("Unable to set activity: %s\n", err)
+			} else {
+				log.Printf("Set activity: %s\n", *activity)
 			}
 		}
 	}
