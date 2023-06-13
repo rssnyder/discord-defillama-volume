@@ -111,13 +111,13 @@ func main() {
 					updates.Inc()
 				}
 			}
-			fmt.Println(activityCycles)
+
 			switch {
 			case activityCycles == 1:
 				if volume.Change1D > 0 {
-					*activity = fmt.Sprintf("%.2fM ↗️", volume.Change1D)
+					*activity = fmt.Sprintf("$%.2fM ↗️", volume.Change1D)
 				} else {
-					*activity = fmt.Sprintf("%.2fM ↘️", volume.Change1D)
+					*activity = fmt.Sprintf("$%.2fM ↘️", volume.Change1D)
 				}
 				activityCycles -= 1
 			case activityCycles == 0:
